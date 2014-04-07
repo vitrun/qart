@@ -1,3 +1,4 @@
+// Package qart generates a pretty qr img
 /**
  * Copyright ©2014-04-07 Alex <zhirun.yu@duitang.com>
  */
@@ -6,18 +7,16 @@ package qart
 import (
 	"bytes"
 	"fmt"
+	"github.com/vitrun/qart/coding"
+	"github.com/vitrun/qart/gf256"
+	"github.com/vitrun/qart/qr"
 	"image"
-	_ "image/gif"
-	_ "image/jpeg"
 	"image/png"
 	"math/rand"
 	"sort"
-	"github.com/vitrun/qart/gf256"
-	"github.com/vitrun/qart/qr"
-	"github.com/vitrun/qart/coding"
 )
 
-type Pixinfo struct {
+type pixinfo struct {
 	X        int
 	Y        int
 	Pix      coding.Pixel
@@ -25,11 +24,11 @@ type Pixinfo struct {
 	DTarg    int
 	Contrast int
 	HardZero bool
-	Block    *BitBlock
+	Block    *bitBlock
 	Bit      uint
 }
 
-type BitBlock struct {
+type bitBlock struct {
 	DataBytes  int
 	CheckBytes int
 	B          []byte
@@ -40,8 +39,7 @@ type BitBlock struct {
 	cdata      []byte
 }
 
-
-func (b *BitBlock) check() {
+func (b *bitBlock) check() {
 	b.RS.ECC(b.B[:b.DataBytes], b.Tmp)
 	if !bytes.Equal(b.B[b.DataBytes:], b.Tmp) {
 		fmt.Printf("ecc mismatch\n%x\n%x\n", b.B[b.DataBytes:], b.Tmp)
@@ -49,7 +47,7 @@ func (b *BitBlock) check() {
 	}
 }
 
-func (b *BitBlock) reset(bi uint, bval byte) {
+func (b *bitBlock) reset(bi uint, bval byte) {
 	if (b.B[bi/8]>>(7-bi&7))&1 == bval {
 		// already has desired bit
 		return
@@ -68,7 +66,7 @@ func (b *BitBlock) reset(bi uint, bval byte) {
 	panic("reset of unset bit")
 }
 
-func (b *BitBlock) canSet(bi uint, bval byte) bool {
+func (b *bitBlock) canSet(bi uint, bval byte) bool {
 	found := false
 	m := b.M
 	for j, row := range m {
@@ -123,18 +121,19 @@ func (b *BitBlock) canSet(bi uint, bval byte) bool {
 	return true
 }
 
-func (b *BitBlock) copyOut() {
+func (b *bitBlock) copyOut() {
 	b.check()
 	copy(b.bdata, b.B[:b.DataBytes])
 	copy(b.cdata, b.B[b.DataBytes:])
 }
 
-type Pixorder struct {
+type pixOrder struct {
 	Off      int
 	Priority int
 }
 
-type byPriority []Pixorder
+type byPriority []pixOrder
+
 func (x byPriority) Len() int           { return len(x) }
 func (x byPriority) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 func (x byPriority) Less(i, j int) bool { return x[i].Priority > x[j].Priority }
@@ -183,8 +182,8 @@ func makeTarg(data []byte, max int) [][]int {
 	return targ
 }
 
-func newBlock(nd, nc int, rs *gf256.RSEncoder, dat, cdata []byte) *BitBlock {
-	b := &BitBlock{
+func newBlock(nd, nc int, rs *gf256.RSEncoder, dat, cdata []byte) *bitBlock {
+	b := &bitBlock{
 		DataBytes:  nd,
 		CheckBytes: nc,
 		B:          make([]byte, nd+nc),
@@ -219,7 +218,7 @@ func pngEncode(c image.Image) []byte {
 	return b.Bytes()
 }
 
-func addDither(pixByOff []Pixinfo, pix coding.Pixel, err int) {
+func addDither(pixByOff []pixinfo, pix coding.Pixel, err int) {
 	if pix.Role() != coding.Data && pix.Role() != coding.Check {
 		return
 	}
@@ -228,7 +227,7 @@ func addDither(pixByOff []Pixinfo, pix coding.Pixel, err int) {
 	pinfo.DTarg += err
 }
 
-
+// Image generates the pretty qr code
 type Image struct {
 	Target   [][]int
 	Dx       int
@@ -331,6 +330,7 @@ func (m *Image) rotate(p *coding.Plan, rot int) {
 	p.Pixel = pix
 }
 
+// Encode encodes
 func (m *Image) Encode() error {
 	p, err := coding.NewPlan(coding.Version(m.Version), coding.L, coding.Mask(m.Mask))
 	if err != nil {
@@ -346,7 +346,7 @@ func (m *Image) Encode() error {
 	rs := gf256.NewRSEncoder(coding.Field, nc)
 
 	// Build information about pixels, indexed by data/check bit number.
-	pixByOff := make([]Pixinfo, (p.DataBytes+p.CheckBytes)*8)
+	pixByOff := make([]pixinfo, (p.DataBytes+p.CheckBytes)*8)
 	expect := make([][]bool, len(p.Pixel))
 	for y, row := range p.Pixel {
 		expect[y] = make([]bool, len(row))
@@ -357,7 +357,7 @@ func (m *Image) Encode() error {
 			}
 			expect[y][x] = pix&coding.Black != 0
 			if r := pix.Role(); r == coding.Data || r == coding.Check {
-				pixByOff[pix.Offset()] = Pixinfo{X: x, Y: y, Pix: pix, Targ: targ, Contrast: contrast}
+				pixByOff[pix.Offset()] = pixinfo{X: x, Y: y, Pix: pix, Targ: targ, Contrast: contrast}
 			}
 		}
 	}
@@ -389,7 +389,7 @@ Again:
 	mbit := bbit + dbit/10*10
 
 	// Choose pixels.
-	bitblocks := make([]*BitBlock, p.Blocks)
+	bitblocks := make([]*bitBlock, p.Blocks)
 	for blocknum := 0; blocknum < p.Blocks; blocknum++ {
 		if blocknum == p.Blocks-extra {
 			nd++
@@ -429,7 +429,7 @@ Again:
 
 		// Can edit [lo, hi) and checksum bits to hit target.
 		// Determine which ones to try first.
-		order := make([]Pixorder, (hi-lo)+nc*8)
+		order := make([]pixOrder, (hi-lo)+nc*8)
 		for i := lo; i < hi; i++ {
 			order[i-lo].Off = doff + i
 		}

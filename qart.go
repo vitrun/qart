@@ -6,21 +6,22 @@ import (
 	"os"
 )
 
+// Encode encodes a string with an image as the background
 func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 	randCtrl, dither, onlyData, saveCtrl bool) []byte {
 	size, rotate := 0, 0
 	if version > 8 {
-		version =8
+		version = 8
 	}
 	if scale == 0 {
 		scale = 8
 	}
-	if version >= 12 && scale >=4 {
+	if version >= 12 && scale >= 4 {
 		scale /= 2
 	}
 
 	target := makeTarg(src, 17+4*version+size)
-	img := &Image {
+	img := &Image{
 		Dx:           x,
 		Dy:           y,
 		URL:          url,
@@ -43,10 +44,10 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 	}
 	var dat []byte
 	switch {
-		case img.SaveControl:
-			dat = img.Control
-		default:
-			dat = img.Code.PNG()
+	case img.SaveControl:
+		dat = img.Control
+	default:
+		dat = img.Code.PNG()
 	}
 	return dat
 }
@@ -54,7 +55,7 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 // EncodeByFile encodes the given url with a specific image
 func EncodeByFile(url, srcImg, dstImg string, version int) {
 	data, err := ioutil.ReadFile(srcImg)
-	if err!=nil {
+	if err != nil {
 		fmt.Printf("err: %s\n", err)
 		return
 	}
