@@ -4,7 +4,7 @@ import (
 	"errors"
 	"image"
 	"image/color"
-	"coding"
+	"github.com/vitrun/qart/coding"
 )
 
 // A Level denotes a QR error correction level.

@@ -9,11 +9,11 @@ import (
 	"io/ioutil"
 	"image/png"
 	"math/rand"
-	"gf256"
 	"sort"
-	"resize"
-	"qr"
-	"coding"
+	"github.com/vitrun/qart/resize"
+	"github.com/vitrun/qart/gf256"
+	"github.com/vitrun/qart/qr"
+	"github.com/vitrun/qart/coding"
 	"os"
 )
 

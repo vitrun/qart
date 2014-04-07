@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"gf256"
+	"github.com/vitrun/qart/gf256"
 )
 
 // Field is the field for QR error correction.
