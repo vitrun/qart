@@ -14,7 +14,13 @@ import (
 
 // ReadWrite test
 func ReadWrite() {
-	i := loadSize("/tmp/in.png", 48)
+	data, err := ioutil.ReadFile("/tmp/in.png")
+	if err != nil {
+		fmt.Printf("err: %s\n", err)
+		return
+	}
+
+	i := loadSize(data, 48)
 	var buf bytes.Buffer
 	png.Encode(&buf, i)
 	ioutil.WriteFile("/tmp/out.png", buf.Bytes(), (os.FileMode)(0644))
@@ -22,10 +28,10 @@ func ReadWrite() {
 }
 
 // Image test
-func TestEncode(t *testing.T) {
+func TestEncodeByFile(t *testing.T) {
 	srcImg := "/tmp/in.png"
 	dstImg := "/tmp/out.png"
 	url := "http://www.baidu.com/"
-	Encode(srcImg, dstImg, url)
+	EncodeByFile(url, srcImg, dstImg, 8)
 }
 
