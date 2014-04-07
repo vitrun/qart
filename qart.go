@@ -1,4 +1,4 @@
-package main
+package qart
 
 import (
 	"bytes"
@@ -15,38 +15,6 @@ import (
 	"github.com/vitrun/qart/coding"
 	"os"
 )
-
-type Image struct {
-	Name     string
-	Target   [][]int
-	Dx       int
-	Dy       int
-	URL      string
-	Tag      string
-	Version  int
-	Mask     int
-	Scale    int
-	Rotation int
-	Size     int
-
-	// RandControl says to pick the pixels randomly.
-	RandControl bool
-	Seed        int64
-
-	// Dither says to dither instead of using threshold pixel layout.
-	Dither bool
-
-	// OnlyDataBits says to use only data bits, not check bits.
-	OnlyDataBits bool
-
-	// Code is the final QR code.
-	Code *qr.Code
-
-	// Control is a PNG showing the pixels that we controlled.
-	// Pixels we don't control are grayed out.
-	SaveControl bool
-	Control     []byte
-}
 
 type Pixinfo struct {
 	X        int
@@ -261,6 +229,39 @@ func addDither(pixByOff []Pixinfo, pix coding.Pixel, err int) {
 	pinfo := &pixByOff[pix.Offset()]
 	println("add", pinfo.X, pinfo.Y, pinfo.DTarg, err)
 	pinfo.DTarg += err
+}
+
+
+type Image struct {
+	Name     string
+	Target   [][]int
+	Dx       int
+	Dy       int
+	URL      string
+	Tag      string
+	Version  int
+	Mask     int
+	Scale    int
+	Rotation int
+	Size     int
+
+	// RandControl says to pick the pixels randomly.
+	RandControl bool
+	Seed        int64
+
+	// Dither says to dither instead of using threshold pixel layout.
+	Dither bool
+
+	// OnlyDataBits says to use only data bits, not check bits.
+	OnlyDataBits bool
+
+	// Code is the final QR code.
+	Code *qr.Code
+
+	// Control is a PNG showing the pixels that we controlled.
+	// Pixels we don't control are grayed out.
+	SaveControl bool
+	Control     []byte
 }
 
 func (m *Image) target(x, y int) (targ byte, contrast int) {
@@ -658,18 +659,8 @@ Again:
 	return nil
 }
 
-// ReadWrite test
-func ReadWrite() {
-	i := loadSize("/tmp/in.png", 48)
-	var buf bytes.Buffer
-	png.Encode(&buf, i)
-	ioutil.WriteFile("/tmp/out.png", buf.Bytes(), (os.FileMode)(0644))
-	fmt.Printf("Hello world!")
-}
-
 // Image test
-func ImageTest() {
-	imgname := "/tmp/in.png"
+func Encode(srcImg, dstImg, url string) {
 	x := 4
 	y := 4
 	s := 879633355
@@ -679,10 +670,9 @@ func ImageTest() {
 	m := 2
 	l := 1
 	scale := 4
-	url := "http://www.baidu.com/"
-	targ := makeTarg(imgname, 17+4*v+size)
+	targ := makeTarg(srcImg, 17+4*v+size)
 	img := &Image{
-		Name:         imgname,
+		Name:         srcImg,
 		Dx:           x,
 		Dy:           y,
 		URL:          url,
@@ -721,16 +711,11 @@ func ImageTest() {
 
 	var dat []byte
 	switch {
-		case img.SaveControl:
-			dat = img.Control
-		default:
-			dat = img.Code.PNG()
+	case img.SaveControl:
+		dat = img.Control
+	default:
+		dat = img.Code.PNG()
 	}
-	ioutil.WriteFile("/tmp/out.png", dat, (os.FileMode)(0644))
+	ioutil.WriteFile(dstImg, dat, (os.FileMode)(0644))
 	return
-}
-
-func main() {
-
-	ImageTest()
 }
