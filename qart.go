@@ -10,7 +10,6 @@ import (
 	"image/png"
 	"math/rand"
 	"sort"
-	"github.com/vitrun/qart/resize"
 	"github.com/vitrun/qart/gf256"
 	"github.com/vitrun/qart/qr"
 	"github.com/vitrun/qart/coding"
@@ -190,9 +189,9 @@ func loadSize(name string, max int) *image.RGBA {
 	var irgba *image.RGBA
 	switch i := i.(type) {
 	case *image.RGBA:
-		irgba = resize.ResizeRGBA(i, i.Bounds(), dx, dy)
+		irgba = qr.ResizeRGBA(i, i.Bounds(), dx, dy)
 	case *image.NRGBA:
-		irgba = resize.ResizeNRGBA(i, i.Bounds(), dx, dy)
+		irgba = qr.ResizeNRGBA(i, i.Bounds(), dx, dy)
 	}
 	return irgba
 }
