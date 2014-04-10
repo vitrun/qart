@@ -12,6 +12,7 @@ import (
 	"github.com/vitrun/qart/qr"
 	"image"
 	"image/png"
+	_ "image/jpeg"
 	"math/rand"
 	"sort"
 )
@@ -143,6 +144,11 @@ func loadSize(data []byte, max int) *image.RGBA {
 	if err != nil {
 		panic(err)
 	}
+//	switch i := i.(type) {
+//	case *image.RGBA64:
+//		i = i.RGBA()
+//	}
+
 	b := i.Bounds()
 	dx, dy := max, max
 	if b.Dx() > b.Dy() {
@@ -152,10 +158,12 @@ func loadSize(data []byte, max int) *image.RGBA {
 	}
 	var irgba *image.RGBA
 	switch i := i.(type) {
-	case *image.RGBA:
-		irgba = qr.ResizeRGBA(i, i.Bounds(), dx, dy)
-	case *image.NRGBA:
-		irgba = qr.ResizeNRGBA(i, i.Bounds(), dx, dy)
+		case *image.RGBA:
+			irgba = qr.ResizeRGBA(i, i.Bounds(), dx, dy)
+		case *image.RGBA64:
+			irgba = qr.ResizeRGBA64(i, i.Bounds(), dx, dy)
+		case *image.NRGBA:
+			irgba = qr.ResizeNRGBA(i, i.Bounds(), dx, dy)
 	}
 	return irgba
 }

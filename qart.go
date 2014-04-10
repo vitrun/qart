@@ -3,7 +3,10 @@ package qart
 import (
 	"fmt"
 	"io/ioutil"
+	"image"
+	"image/png"
 	"os"
+	"bytes"
 )
 
 // Encode encodes a string with an image as the background
@@ -19,8 +22,18 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 	if version >= 12 && scale >= 4 {
 		scale /= 2
 	}
+	// TODO. support more than png
+	decodedImg, _, err := image.Decode(bytes.NewBuffer(src))
+	if err != nil {
+		return nil
+	}
+	writer := new(bytes.Buffer)
+	err = png.Encode(writer, decodedImg)
+	if err != nil {
+		return nil
+	}
 
-	target := makeTarg(src, 17+4*version+size)
+	target := makeTarg(writer.Bytes(), 17+4*version+size)
 	img := &Image{
 		Dx:           x,
 		Dy:           y,
