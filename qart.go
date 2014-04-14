@@ -7,7 +7,46 @@ import (
 	"image/png"
 	"os"
 	"bytes"
+	"github.com/vitrun/qart/qr"
 )
+
+// convert2PNG convert any format to PNG
+func convert2PNG(i image.Image) bytes.Buffer{
+	// Convert image to 128x128 gray+alpha.
+	b := i.Bounds()
+	const max = 128
+	// If it's gigantic, it's more efficient to downsample first
+	// and then resize; resizing will smooth out the roughness.
+	var i1 *image.RGBA
+	if b.Dx() > 4*max || b.Dy() > 4*max {
+		w, h := 2*max, 2*max
+		if b.Dx() > b.Dy() {
+			h = b.Dy() * h / b.Dx()
+		} else {
+			w = b.Dx() * w / b.Dy()
+		}
+		i1 = qr.Resample(i, b, w, h)
+	} else {
+		// "Resample" to same size, just to convert to RGBA.
+		i1 = qr.Resample(i, b, b.Dx(), b.Dy())
+	}
+	b = i1.Bounds()
+
+	// Encode to PNG.
+	dx, dy := 128, 128
+	if b.Dx() > b.Dy() {
+		dy = b.Dy() * dx / b.Dx()
+	} else {
+		dx = b.Dx() * dy / b.Dy()
+	}
+	i128 := qr.ResizeRGBA(i1, i1.Bounds(), dx, dy)
+
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, i128); err != nil {
+		panic(err)
+	}
+	return buf
+}
 
 // Encode encodes a string with an image as the background
 func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
@@ -22,18 +61,15 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 	if version >= 12 && scale >= 4 {
 		scale /= 2
 	}
-	// TODO. support more than png
+
 	decodedImg, _, err := image.Decode(bytes.NewBuffer(src))
 	if err != nil {
 		return nil
 	}
-	writer := new(bytes.Buffer)
-	err = png.Encode(writer, decodedImg)
-	if err != nil {
-		return nil
-	}
 
-	target := makeTarg(writer.Bytes(), 17+4*version+size)
+	buf := convert2PNG(decodedImg)
+	target := makeTarg(buf.Bytes(), 17+4*version+size)
+
 	img := &Image{
 		Dx:           x,
 		Dy:           y,
