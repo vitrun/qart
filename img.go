@@ -160,8 +160,6 @@ func loadSize(data []byte, max int) *image.RGBA {
 	switch i := i.(type) {
 		case *image.RGBA:
 			irgba = qr.ResizeRGBA(i, i.Bounds(), dx, dy)
-		case *image.RGBA64:
-			irgba = qr.ResizeRGBA64(i, i.Bounds(), dx, dy)
 		case *image.NRGBA:
 			irgba = qr.ResizeNRGBA(i, i.Bounds(), dx, dy)
 	}
