@@ -4,16 +4,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"image"
+	"image/color"
 	"image/png"
 	"os"
 	"bytes"
 	"github.com/vitrun/qart/qr"
 )
 
+// grayScale turn the image into white and black
+func grayScale(src image.Image) *image.Gray{
+	bounds := src.Bounds()
+	w, h := bounds.Max.X, bounds.Max.Y
+	gray := image.NewGray(bounds)
+	for x := 0; x < w; x++ {
+		for y := 0; y < h; y++ {
+			oldColor := src.At(x, y)
+			grayColor := color.GrayModel.Convert(oldColor)
+			gray.Set(x, y, grayColor)
+		}
+	}
+	return gray
+}
+
 // convert2PNG convert any format to PNG
 func convert2PNG(i image.Image) bytes.Buffer{
 	// Convert image to 128x128 gray+alpha.
+//	i := grayScale(i)
 	b := i.Bounds()
+
 	const max = 128
 	// If it's gigantic, it's more efficient to downsample first
 	// and then resize; resizing will smooth out the roughness.
