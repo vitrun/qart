@@ -96,7 +96,7 @@ func reducible(p int) bool {
 	// so if p is reducible, one of its factors must be
 	// of np/2+1 bits or fewer.
 	np := nbit(p)
-	for q := 2; q < 1<<(np/2+1); q++ {
+	for q := 2; q < int(1<<(np/2+1)); q++ {
 		if polyDiv(p, q) == 0 {
 			return true
 		}

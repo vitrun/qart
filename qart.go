@@ -66,9 +66,10 @@ func convert2PNG(i image.Image) bytes.Buffer{
 	return buf
 }
 
-// Encode encodes a string with an image as the background
-func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
-	randCtrl, dither, onlyData, saveCtrl bool) []byte {
+//InitImage prepares the image
+func InitImage(src []byte, seed int64, version, scale, mask, x, y int,
+	randCtrl, dither, onlyData, saveCtrl bool) *Image{
+
 	size, rotate := 0, 0
 	if version > 8 {
 		version = 8
@@ -91,7 +92,7 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 	img := &Image{
 		Dx:           x,
 		Dy:           y,
-		URL:          url,
+		URL:          "",
 		Version:      version,
 		Mask:         mask,
 		RandControl:  randCtrl,
@@ -104,7 +105,12 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 		Rotation:     rotate,
 		Size:         size,
 	}
+	return img
+}
 
+// EncodeUrl encodes the url to the prepared image
+func EncodeUrl(url string, img *Image) []byte {
+	img.URL = url
 	if err := img.Encode(); err != nil {
 		fmt.Printf("error: %s\n", err)
 		return nil
@@ -117,6 +123,14 @@ func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
 		dat = img.Code.PNG()
 	}
 	return dat
+}
+
+// Encode encodes a string with an image as the background
+func Encode(url string, src []byte, seed int64, version, scale, mask, x, y int,
+	randCtrl, dither, onlyData, saveCtrl bool) []byte {
+
+	img := InitImage(src, seed, version, scale, mask, x, y, randCtrl, dither, onlyData, saveCtrl)
+	return EncodeUrl(url, img)
 }
 
 // EncodeByFile encodes the given url with a specific image
