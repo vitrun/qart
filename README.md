@@ -5,5 +5,5 @@ no inherent errors.
 
 ## Technical Details
 Check http://research.swtch.com/qart for detail. The original code is written by iRuss Cox 
-and can be downloaded at code.google.com/p/rsc/source/browse/qr
+and can be downloaded at https://github.com/rsc/qr
 
